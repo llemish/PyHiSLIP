@@ -1,5 +1,5 @@
 # PyHiSLIP
-Python realization of High-Speed LAN Instrument Protocol (HiSLIP)
+PyHiSLIP is Python-based interpretation of High-Speed LAN Instrument Protocol (HiSLIP)
 
 Python package for support HiSLIP client work.
 

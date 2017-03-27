@@ -1,0 +1,150 @@
+PyHiSLIP description
+
+
+Initialization Transaction:
+
+	import HiSLIP
+
+	pyhislip = HiSLIP()
+
+	pyhislip.connect(ip, sub_adress, port, vendor_id)
+
+	Where:
+	ip: string with IP-address of HiSLIP sever.
+
+	sub_adress: This field corresponds to the VISA LAN device name. It identifies a particular device
+		managed by this server. It is in the payload field and therefore includes a 64-bit count.
+		The count is followed by the appropriate length ASCII sub-address. For instance:
+		“device2”. The maximum length for this field is 256 characters. Note that VISA
+		requires that such HiSLIP device names begin with ‘hislip’ and contain only
+		alphanumeric characters, with a default of device name of ‘hislip0’.
+ 		If the sub-address is null (zero length) the initialize opens the default (perhaps only)
+		device at this IP address. 
+
+	port: By default, all HiSLIP clients and servers shall use the IANA assigned port number of 4880.
+			This does not preclude HiSLIP clients and servers configuring to use the HiSLIP protocol
+			on other ports. 
+
+	vendor_id: client-vendorID. This identifies the vendor of the HiSLIP protocol on the client.
+		This is the twocharacter vendor abbreviation from the VXI plug&play specification VPP-9. These
+		abbreviations are assigned free of charge by the IVI Foundation
+
+
+Maximum Message Size Transaction:
+
+	pyhislip.set_max_message_size(max_message_size)
+
+	Where:
+	max_message_size: 64-bit integer. By default is 272. 16 bytes of header + 256 for message.
+
+
+Status Query Transaction:
+
+	[mav, status] = pyhislip.status_query()
+
+	Where:
+
+	mav: From IEEE Std 488.2: A bit indicating that there is a message available from the
+		server. 
+
+	status: control code, that consist MAV.
+
+
+DataTransfer Messages:
+
+	There are two methods, for send data to server.
+	Use "write", for just send some data to server,
+	and use "ask", for send query and got answer.
+
+	
+	pyhislip.write(data)
+
+	Where:
+	data: string that will be sent to server. If data doesn't include '\n' in the end, it will be added automaticly.
+
+	
+	answer = pyhislip.ask(query)
+
+	Where:
+	query: string that will be sent to server. If data doesn't include '\n' in the end, it will be added automaticly.
+	answer: string gotten from server.
+
+
+Lock Transaction:
+
+	There are two methods, one for request lock, another for release.
+
+	
+	result = pyhislip.request_lock(lock_string)
+
+	Where:
+	lock_string: an ASCII string that identifies this lock. By default is "". If lock_string is empty, send
+	request for an exclusive lock. If lock_string isn't empty, send request for shared lock.
+
+	result: Control Code from LockResponse:
+			0 - fail
+			1 - success
+			3 - error
+
+
+	result = pyhislip.release_lock()
+
+	Where:
+	result: Control Code from LockResponse:
+			1 - release of exclusive lock was granted
+			2 - release of shared lock was granted
+			3 - error
+
+
+Lock Info Transaction:
+
+	[exclusive_lock, locks_granted] = pyhislip.lock_info()
+
+	Where:
+	exclusive_lock: 1 if an exclusive lock has been granted and 0 otherwise.
+	locks_granted: the number of clients that were holding locks when AsyncLockInfo was processed. A
+		client holding both a shared and exclusive lock is counted only once.
+
+
+Remote Local Transaction:
+
+	pyhislip.remote_local(request)
+
+	This method realize GPIB-like remote/local control.
+        Possible request values:
+            0 - Disable remote
+            1 - Enable remote
+            2 - Disable remote and go to local
+            3 - Enable remote and go to remote
+            4 - Enable remote and lock out local
+            5 - Enable remote, got to remote, and set local lockout
+            6 - go to local without changing state of remote enable
+
+
+Trigger Message:
+
+	pyhislip.trigger_message()
+
+	The trigger message is used to emulate a GPIB Group Execute Trigger. This message shall have the same instrument
+	semantics as GPIB Group Execute Trigger. 
+
+
+Device Clear Transaction:
+
+	pyhislip.device_clear()
+
+	Device clear clears the communication channel.
+
+
+Set Socket Timeout
+
+	pyhislip.set_timeout(timeout)
+
+	Set timeout for socket
+
+
+Set Lock Timeout
+
+	pyhislip.set_lock_timeout(timeout)
+
+	Set timeout in seconds for client, to wait lock from server.

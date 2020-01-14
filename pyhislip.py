@@ -10,6 +10,7 @@ Created on 28 feb 2017
 
 import socket
 import struct
+from time import sleep
 
 from collections import OrderedDict
 
@@ -402,6 +403,7 @@ class _HiSLIP():
 
         # read header and data
         try:
+
             raw_header = sock.recv(16)
             header = self._split_hislip_header(raw_header)
             if header['payload_length'] > 0:
@@ -412,9 +414,7 @@ class _HiSLIP():
                 data = str()
         except socket.timeout:
             self._raise_fatal_error(1, 1)
-
         self._message_exceptions(header, raw_data, expected_message_type)
-
         return header, data
 
     def set_timeout(self, timeout):
@@ -541,6 +541,7 @@ class HiSLIP(_HiSLIP):
         while not mav and timeout < 180:
             mav = self.status_query()[0]
             timeout = time() - start_time
+            sleep(0.1)
 
     def write(self, data_str):
         ''' Method send "data" to server. "data" is string '''
@@ -581,10 +582,9 @@ class HiSLIP(_HiSLIP):
         # read and analyze answer
         full_data = str()
         eom = False
-
         while not eom:
             [header, data] = self._read_hislip_message(self.sync_channel)
-            if header['message_parameter'] == self.most_recent_message_id:
+            if (header['message_parameter'] == self.most_recent_message_id) or (not self.overlap_mode and header['message_parameter'] == struct.unpack('>I', b'\xff\xff\xff\xff')[0]):
                 if header['message_type'] == self.message_types['Data']:
                     full_data = full_data + data
                 elif header['message_type'] == self.message_types['DataEnd']:
@@ -598,7 +598,6 @@ class HiSLIP(_HiSLIP):
                 self._raise_error(1, 1)
                 full_data = str()
                 break
-
         return full_data
 
     def lock_info(self):
